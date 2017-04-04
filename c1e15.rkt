@@ -50,10 +50,10 @@
 ; interpretation represents a "happiness value"
 ; e.g. 1, or 30, or 99
 
-(define-struct person [fstname lstname male?])
-; a Person is a structure:
+(define-struct person2 [fstname lstname male?])
+; a Person2 is a structure:
 ; (make-person String String Boolean)
-; e.g. (make-person "John" "Smith" #true)
+; e.g. (make-person2 "John" "Smith" #true)
 ; it's not a good idea to use a predicate-like field name.
 ; it will confuse another reader of the code and make them
 ; think there might be a function where a value belongs.
@@ -76,3 +76,22 @@
 ; e.g.(make-weapon value) or (make-weapon (make-posn 0 0))
 
 ; Exercise 79: adding examples to function definitons
+
+(define-struct r3 [x y z])
+; A R3 is a structure:
+;   (make-r3 Number Number Number)
+(define ex1 (make-r3 1 2 13))
+(define ex2 (make-r3 -1 0 3))
+
+; R3 -> Number
+; interpretation: a function that takes a R3 xyz and computes
+; the distance from xyz to the origin
+(define (distance3d xyz)
+  (sqrt (+
+         (* (r3-x xyz) (r3-x xyz)) ; extracting the x distance 
+         (* (r3-y xyz) (r3-y xyz)) ; extracting the y distance
+         (* (r3-z xyz) (r3-z xyz)) ; extracting the z distance
+  )))
+
+(check-within (distance3d ex1) (sqrt 174) 0.01)
+(check-within (distance3d ex2) (sqrt 10) 0.01)
