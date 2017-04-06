@@ -138,30 +138,40 @@
 ; Editor, KeyEvent -> Editor
 (define (edit ed stroke)
   (cond
-    [(string=? stroke "\b")
-     (make-editor
-      (string-minus-one (editor-pre ed))
-      (editor-post ed))]
-    [(string=? stroke "left")
-     (make-editor
-      (string-minus-one (editor-pre ed))
-      (string-append
-       (string-last (editor-pre ed))
-       (editor-post ed)))]
-    [(string=? stroke "right")
-     (make-editor
-      (string-append
-       (editor-pre ed)
-       (string-first (editor-post ed)))
-      (substring (editor-post ed) 1))]
-    [(> (string-length stroke) 1)
-     (make-editor
-      (editor-pre ed)
-      (editor-post ed))]
+    [(and (<= (image-width BACKG)
+              (image-width (text
+                            (string-append (editor-pre ed)
+                                      (editor-post ed))
+                            16
+                            "black")))
+          (not (string=? stroke "\b")))
+     (make-editor (editor-pre ed) (editor-post ed))]
     [else
-     (make-editor
-      (string-append (editor-pre ed) stroke)
-      (editor-post ed))]))
+     (cond
+       [(string=? stroke "\b")
+        (make-editor
+         (string-minus-one (editor-pre ed))
+         (editor-post ed))]
+       [(string=? stroke "left")
+        (make-editor
+         (string-minus-one (editor-pre ed))
+         (string-append
+          (string-last (editor-pre ed))
+          (editor-post ed)))]
+       [(string=? stroke "right")
+        (make-editor
+         (string-append
+          (editor-pre ed)
+          (string-first (editor-post ed)))
+         (string-minus-first (editor-post ed)))]
+       [(> (string-length stroke) 1)
+        (make-editor
+         (editor-pre ed)
+         (editor-post ed))]
+       [else
+        (make-editor
+         (string-append (editor-pre ed) stroke)
+         (editor-post ed))])]))
 ; expects a KeyEvent stroke and an Editor ed, and returns an
 ; editor with the text before the cursor modified.
 
@@ -173,13 +183,27 @@
 ; the left arrow ("left")
 ; the right arrow ("right")
 
-(define (string-first str) (substring str 0 1))
-(define (string-last str) (substring str (- (string-length str) 1)))
+(define (string-first str)
+  (cond
+    [(> (string-length str) 0)
+     (substring str 0 1)]
+    [else str]))
+(define (string-last str)
+  (cond
+    [(> (string-length str) 0)
+     (substring str (- (string-length str) 1))]
+    [else str]))
 (define (string-minus-one str)
-  (substring str
-  0
-  (- (string-length str) 1)))
-
+  (cond
+   [(> (string-length str) 0)
+    (substring str 0
+               (- (string-length str) 1))]
+   [else str]))
+(define (string-minus-first str)
+  (cond
+    [(> (string-length str) 0)
+     (substring str 1)]
+    [else str]))
 (check-expect (edit e-test "f") (make-editor "blah f" "bloo"))
 (check-expect (edit e-test "1") (make-editor "blah 1" "bloo"))
 (check-expect (edit e-test "#") (make-editor "blah #" "bloo"))
@@ -188,6 +212,27 @@
 (check-expect (edit e-test "\b") (make-editor "blah" "bloo"))
 (check-expect (edit e-test "down") (make-editor "blah " "bloo"))
 
+(define etest2 (make-editor "" ""))
+(define etest3 (make-editor "meeeeeeeeeeeeeeeeeeeeeeee" ""))
+
+(check-expect (edit etest2 "left") (make-editor "" ""))
+(check-expect (edit etest2 "right") (make-editor "" ""))
+(check-expect (edit etest3 "\b") (make-editor "meeeeeeeeeeeeeeeeeeeeeee" ""))
+
 ; Exercise 84: the edit function, composed and recomposed
 ; using the principle of don't repeat yourself
-  
+
+; Exercise 86: checks to the length of the string reveal more
+; issues to account for: left and right at the ends of strings
+
+; String -> Editor
+; Given a string s, creates a big-bang program with an internal
+; state tracked by an editor created using s as the pre-cursor
+; text
+(define (run s)
+  (big-bang (make-editor s "")
+            (to-draw render)
+            (on-key edit)))
+
+; Exercise 85: uncovering new errors when using the interactive
+; program for the first time
