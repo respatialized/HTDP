@@ -97,3 +97,32 @@
 (define fired2 (make-fired (make-posn 20 100)
                            (make-tank 100 3)
                            (make-posn 22 103)))
+
+; SIGS -> Image
+; adds TANK, UFO, and possibly MISSILE to
+; the BACKGROUND scene
+(define (si-render s)
+  (cond
+    [(aim? s) (tank-render (aim-tank s)
+                           (ufo-render (aim-ufo s) BACKGROUND))]
+    [(fired? s)
+     (tank-render
+      (fired-tank s)
+      (ufo-render (fired-ufo s)
+                  (missile-render (fired-missile s)
+                                  BACKGROUND)))]))
+    
+; using this conditional template and remembering selectors
+; for each data structure contained in SIGS, it is easy to
+; com up with a wishlist for functions
+
+... (tank-render (aim-tank s)
+                 (ufo-render (aim-ufo s) BACKGROUND))
+
+; Tank Image -> Image
+; adds a Tank t to the given image im
+(define (tank-render t im) im)
+
+; UFO Image -> Image
+; adds u to the given image im
+(define (ufo-render u im))
