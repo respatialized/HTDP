@@ -19,11 +19,12 @@
    (circle UFO_HEIGHT "solid" UFO_COLOR)))
 
 (define TANK_WIDTH 22)
-(define TANK_HEIGHT (* TANK_WIDTH 0.45))
+(define TANK_BODY_HEIGHT (* TANK_WIDTH 0.45))
 (define TANK_CANNON_WIDTH (* TANK_WIDTH 0.45))
 (define TANK_CANNON_HEIGHT (* TANK_CANNON_WIDTH 0.3333))
 (define TANK_MOUNT_SIZE (* TANK_WIDTH 0.27))
 (define TANK_COLOR "gray")
+(define TANK_HEIGHT (+ TANK_BODY_HEIGHT TANK_CANNON_HEIGHT))
 
 (define TANK
   (above/align "left"
@@ -32,8 +33,10 @@
                "solid" TANK_COLOR)
     (rectangle TANK_MOUNT_SIZE TANK_MOUNT_SIZE
                "solid" TANK_COLOR))
-   (rectangle TANK_WIDTH TANK_HEIGHT
+   (rectangle TANK_WIDTH TANK_BODY_HEIGHT
               "solid" TANK_COLOR)))
+
+(define MISSILE (triangle 7 "solid" "red"))
 
 (define BACKG
   (empty-scene WIDTH HEIGHT "blue"))
@@ -59,6 +62,14 @@
                 (circle 10 "solid" "white")
                 8 2
                 (circle 10 "solid" "white"))))
+
+(define BACKGROUND
+  (place-image
+   (cloud 10) 30 40
+   (place-image
+    (cloud 13)
+    90 120
+    BACKG)))
 
 ; Exercise 94: the UFO approaches
 
@@ -89,9 +100,10 @@
 (define aim1 (make-aim (make-posn 20 10) (make-tank 28 -3)))
 
 ; The tank, UFO, and missile just after firing
-(define fired1 (make-fired (make-posn 20 10)
-                           (make-tank 28 -3)
-                           (make-posn (- HEIGHT TANK-HEIGHT))))
+(define fired1
+  (make-fired (make-posn 20 10)
+              (make-tank 28 -3)
+              (make-posn 32 (- HEIGHT TANK_HEIGHT 10))))
 
 ; The tank, UFO, and missile just before the UFO is hit
 (define fired2 (make-fired (make-posn 20 100)
@@ -116,13 +128,78 @@
 ; for each data structure contained in SIGS, it is easy to
 ; com up with a wishlist for functions
 
-... (tank-render (aim-tank s)
-                 (ufo-render (aim-ufo s) BACKGROUND))
-
 ; Tank Image -> Image
 ; adds a Tank t to the given image im
-(define (tank-render t im) im)
+(define (tank-render t im)
+  (place-image TANK (tank-loc t) (- HEIGHT TANK_HEIGHT 1) im))
+
+(check-expect (tank-render (make-tank 50 0) BACKGROUND)
+              (place-image TANK 50 (- HEIGHT TANK_HEIGHT 1)
+                           BACKGROUND))
+                                      
 
 ; UFO Image -> Image
 ; adds u to the given image im
-(define (ufo-render u im))
+(define (ufo-render u im)
+  (place-image UFO (posn-x u) (posn-y u) im))
+
+(check-expect (ufo-render (make-posn 50 0) BACKGROUND)
+              (place-image UFO 50 0 BACKGROUND))
+
+
+; Missile Image -> Image
+; adds a Missile m to the given image im
+(define (missile-render m im)
+  (place-image MISSILE (posn-x m) (posn-y m) im))
+
+(check-expect (missile-render (make-posn 50 0) BACKGROUND)
+              (place-image MISSILE 50 0 BACKGROUND))
+
+(define s1 (tank-render
+            (fired-tank fired1)
+            (ufo-render (fired-ufo fired1)
+             (missile-render (fired-missile fired1)
+                             BACKGROUND))))
+
+(define s2 (ufo-render
+            (fired-ufo fired1)
+            (tank-render
+             (fired-tank fired1)
+             (missile-render (fired-missile fired1)
+                             BACKGROUND))))
+
+(define s3 (tank-render
+            (fired-tank fired2)
+            (ufo-render (fired-ufo fired2)
+             (missile-render (fired-missile fired2)
+                             BACKGROUND))))
+
+(define s4 (ufo-render
+            (fired-ufo fired2)
+            (tank-render
+             (fired-tank fired2)
+             (missile-render (fired-missile fired2)
+                             BACKGROUND))))
+
+(define fired3 (make-fired
+                (make-posn 20 595)
+                (make-tank 20 2)
+                (make-posn 30 20)))
+
+(define s5 (tank-render
+            (fired-tank fired3)
+            (ufo-render (fired-ufo fired3)
+             (missile-render (fired-missile fired3)
+                             BACKGROUND))))
+
+(define s6 (ufo-render
+            (fired-ufo fired3)
+            (tank-render
+             (fired-tank fired3)
+             (missile-render (fired-missile fired3)
+                             BACKGROUND))))
+
+; Exercise 97: testing how different rendering orders affect
+; equality testing of images. Intuitively, the (equal? )
+; predicate returns #false for the two images when objects
+; in the scene are drawn on top of one another
