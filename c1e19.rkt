@@ -203,3 +203,59 @@
 ; equality testing of images. Intuitively, the (equal? )
 ; predicate returns #false for the two images when objects
 ; in the scene are drawn on top of one another
+
+; SIGS -> boolean
+; A function to check whether the game-ending conditions
+; are met. Interpretation: stop the game if the UFO reaches
+; the bottom of the screen or the missile hits the ufo
+(define (si-game-over? si)
+  (or
+   (and (fired? si)
+        (and (< (abs (- (posn-y (fired-missile si))
+                     (posn-y (fired-ufo si))))
+                (/ UFO_HEIGHT 2))
+             (< (abs (- (posn-x (fired-missile si))
+                        (posn-x (fired-ufo si))))
+                (/ UFO_WIDTH 2))))
+   (> (posn-y (cond [(fired? si) (fired-ufo si)]
+                    [(aim? si) (aim-ufo si)]))
+      (- HEIGHT (/ UFO_HEIGHT 2)))))
+
+(check-expect (si-game-over? (make-aim
+                              (make-posn 20 600)
+                              (make-tank 50 0)))
+              #true)
+
+(check-expect (si-game-over? (make-fired
+                              (make-posn 20 100)
+                              (make-tank 50 0)
+                              (make-posn 21 98)))
+              #true)
+
+(check-expect (si-game-over? (make-aim
+                              (make-posn 0 0)
+                              (make-tank 0 3)))
+              #false)
+
+(check-expect (si-game-over? (make-fired
+                              (make-posn 20 700)
+                              (make-tank 50 0)
+                              (make-posn 21 98)))
+              #true)
+
+
+; SIGS -> Image
+; A function to render the final state of the game world
+; when it terminates.
+(define (si-render-final si)
+  (overlay/align "center" "center"
+                 (text "game over!" 24 "black")              
+                 BACKGROUND))
+
+(check-expect (si-render-final fired1)
+              (overlay/align "center" "center"
+                             (text "game over!" 24 "black")
+                             BACKGROUND))
+
+; Exercise 98: determining when to bring the game to a close
+; -- though unclear if si-render-final has the right structure
