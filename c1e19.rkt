@@ -259,3 +259,49 @@
 
 ; Exercise 98: determining when to bring the game to a close
 ; -- though unclear if si-render-final has the right structure
+
+; SIGS -> SIGS
+; A function to update the game state by moving the objects
+; in the world
+(define (si-move w)
+  (cond
+    [(fired? w)
+     (make-fired
+      (si-move-proper (fired-ufo w)
+                      (randomize 2.5))
+      (fired-tank w)
+      (fired-missile w))]
+    [(aim? w)
+     (make-aim
+      (si-move-proper (aim-ufo w)
+                      (randomize 2.5))
+      (aim-tank w))]))
+
+; Number -> Number
+; Generate a new random value within a multiple n
+; of UFO_WIDTH
+(define (randomize n)
+  (- (random (round (* UFO_WIDTH n)))
+        (/ (* UFO_WIDTH n) 2)))
+
+(check-random (randomize 2.5)
+              (- (random (round (* UFO_WIDTH 2.5)))
+                 (/ (* UFO_WIDTH 2.5) 2)))
+
+; UFO Number -> UFO
+; move the space invader object predictably to delta
+(define (si-move-proper u delta)
+ (make-posn (+ delta (posn-x u)) (+ (posn-y u) UFOSPEED)))
+; this is much better than using a SIGS
+
+(check-expect (si-move-proper (make-posn 100 30) -13)
+              (make-posn 87 32.5))
+
+; to test random functions, wrap a deterministic function
+; (which is testable) in a bigger function that adds the
+; random element
+; -- alternatively, keep track of the random seed during tests
+; -- or use (check-random)
+
+; Exercise 99: controlling randomness through function
+; composition
