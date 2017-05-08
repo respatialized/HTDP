@@ -261,7 +261,7 @@
 ; -- though unclear if si-render-final has the right structure
 
 ; SIGS -> SIGS
-; A function to update the game state by moving the objects
+; A function to update the game state by moving the ufo
 ; in the world
 (define (si-move w)
   (cond
@@ -277,6 +277,34 @@
                       (randomize 2.5))
       (aim-tank w))]))
 
+; SIGS Number -> SIGS
+; move all the objects in the game world (with randomness)
+(define (si-move.v2 w)
+  (cond
+    [(aim? w)
+     
+        
+; SIGS Number -> SIGS
+; move all the objects in the game world (predictably)
+; by delta
+(define (si-move-proper.v2 w delta) w
+  (cond
+    [(aim? w)
+     (make-aim
+      (make-posn (+ (posn-x (aim-ufo w)) delta)
+                 (+ (posn-y (aim-ufo w)) UFOSPEED))
+      (make-tank (+ (tank-loc (aim-tank w))
+                    (tank-vel (aim-tank w)))
+                 (tank-vel (aim-tank w))))]
+    [(fired? w)
+     (make-fired
+      (make-posn (+ (posn-x (fired-ufo w)) delta)
+                 (+ (posn-y (fired-ufo w)) UFOSPEED))
+      (make-tank (+ (tank-loc (fired-tank w))
+                    (tank-vel (fired-tank w)))
+                 (tank-vel (fired-tank w))))]))
+
+     
 ; Number -> Number
 ; Generate a new random value within a multiple n
 ; of UFO_WIDTH
@@ -305,3 +333,4 @@
 
 ; Exercise 99: controlling randomness through function
 ; composition
+
