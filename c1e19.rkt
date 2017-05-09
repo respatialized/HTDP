@@ -280,14 +280,19 @@
 ; SIGS Number -> SIGS
 ; move all the objects in the game world (with randomness)
 (define (si-move.v2 w)
-  (cond
-    [(aim? w)
-     
+  (si-move-proper.v2 w (randomize 2)))
+
+(check-random (si-move.v2 aim1)
+              (si-move-proper.v2 aim1
+                                 (-
+                                  (random
+                                   (round (* UFO_WIDTH 2)))
+                                  (/ (* UFO_WIDTH 2) 2))))
         
 ; SIGS Number -> SIGS
 ; move all the objects in the game world (predictably)
 ; by delta
-(define (si-move-proper.v2 w delta) w
+(define (si-move-proper.v2 w delta)
   (cond
     [(aim? w)
      (make-aim
@@ -302,7 +307,22 @@
                  (+ (posn-y (fired-ufo w)) UFOSPEED))
       (make-tank (+ (tank-loc (fired-tank w))
                     (tank-vel (fired-tank w)))
-                 (tank-vel (fired-tank w))))]))
+                 (tank-vel (fired-tank w)))
+      (make-posn (posn-x (fired-missile w))
+                 (- (posn-y (fired-missile w))
+                    MISSILESPEED)))]))
+
+(check-expect (si-move-proper.v2 aim1 3)
+              (make-aim
+               (make-posn 23 12.5)
+               (make-tank 25 -3)))
+
+
+(check-expect (si-move-proper.v2 fired1 3)
+              (make-fired
+               (make-posn 23 12.5)
+               (make-tank 25 -3)
+               (make-posn 32 (- HEIGHT TANK_HEIGHT 16.25))))
 
      
 ; Number -> Number
