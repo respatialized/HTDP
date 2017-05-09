@@ -354,3 +354,32 @@
 ; Exercise 99: controlling randomness through function
 ; composition
 
+; SIGS, KeyEvent -> SIGS
+; A function to change the state of the game using a KeyEvent
+; interpretation: "left" changes the direction of the tank to
+; left, "right" changes the direction of the tank to right,
+; "space" launches a missile if it hasn't been launched yet
+(define (si-control w ke)
+  (cond
+    [(aim? w)
+     (cond
+       [(and (string=? "left" ke)
+            (> (tank-vel (aim-tank w)) 0))
+        (make-aim
+         (make-posn (posn-x (aim-ufo w))
+                    (posn-y (aim-ufo w)))
+         (make-tank (tank-loc (aim-tank w))
+                    (* -1 (tank-vel (aim-tank w)))))]
+       [(and (string=? "right" ke)
+             (< (tank-vel (aim-tank w)) 0))
+        (make-aim
+         (make-posn (posn-x (aim-ufo w))
+                    (posn-y (aim-ufo w)))
+         (make-tank (tank-loc (aim-tank w))
+                    (* -1 (tank-vel (aim-
+
+
+; Tank -> Tank
+; A function to reverse the direction of a Tank
+; interpretation: returns a Tank with 
+(
