@@ -512,3 +512,220 @@
                             (ufo-render
                              (make-posn 20 10) BACKGROUND))))
 ; Exercise 101: Test cases for alternative data definitions
+
+(define (si-main.v2 iufo itank)
+  (big-bang (make-sigs iufo itank #false)
+            (on-tick si-move.v2)
+            (to-draw si-render.v2)
+            (on-key si-control.v2)
+            (stop-when si-game-over?.v2 si-render-final)))
+
+; SIGS -> Image
+; Returns an image based on the current locations of the
+; ufo, tank, and missile
+(define (si-render.v2 s)
+  (tank-render
+   (sigs-tank s)
+   (ufo-render (sigs-ufo s)
+               (missile-render.v2 (sigs-missile s)
+                                  BACKGROUND))))
+
+; SIGS, KeyEvent -> SIGS
+; A function to change the state of the game using a KeyEvent
+; interpretation: "left" changes the direction of the tank to
+; left, "right" changes the direction of the tank to right,
+; "space" launches a missile if it hasn't been launched yet
+(define (si-control.v2 w ke)
+  (cond
+    [(boolean? (sigs-missile w))
+     (cond
+       [(and (string=? "left" ke)
+            (> (tank-vel (sigs-tank w)) 0))
+        (make-sigs
+         (make-posn (posn-x (sigs-ufo w))
+                    (posn-y (sigs-ufo w)))
+         (reverse-tank (sigs-tank w))
+         #false)]
+       [(and (string=? "right" ke)
+             (< (tank-vel (sigs-tank w)) 0))
+        (make-sigs
+         (make-posn (posn-x (sigs-ufo w))
+                    (posn-y (sigs-ufo w)))
+         (reverse-tank (sigs-tank w))
+         #false)]
+       [(string=? ke " ")
+        (make-sigs
+         (sigs-ufo w)
+         (sigs-tank w)
+         (make-posn (tank-loc (sigs-tank w))
+                    (- HEIGHT TANK_HEIGHT 10)))]
+       [else
+        (make-sigs (sigs-ufo w) (sigs-tank w) #false)])]
+    [(posn? (sigs-missile w))
+     (cond
+       [(and (string=? "left" ke)
+            (> (tank-vel (sigs-tank w)) 0))
+        (make-sigs
+         (make-posn (posn-x (sigs-ufo w))
+                    (posn-y (sigs-ufo w)))
+         (reverse-tank (sigs-tank w))
+         (make-posn (posn-x (sigs-missile w))
+                    (posn-y (sigs-missile w))))]
+       [(and (string=? "right" ke)
+             (< (tank-vel (sigs-tank w)) 0))
+        (make-sigs
+         (make-posn (posn-x (sigs-ufo w))
+                    (posn-y (sigs-ufo w)))
+         (reverse-tank (sigs-tank w))
+         (make-posn (posn-x (sigs-missile w))
+                    (posn-y (sigs-missile w))))]
+       [else
+        (make-sigs (sigs-ufo w)
+                   (sigs-tank w)
+                   (sigs-missile w))])]))
+
+(define sigs1 (make-sigs
+               (make-posn 100 20)
+               (make-tank 20 3)
+               #false))
+
+(define sigs2 (make-sigs
+               (make-posn 100 20)
+               (make-tank 20 3)
+               (make-posn
+                20 (- HEIGHT
+                      TANK_HEIGHT
+                      10))))
+
+(define sigs3 (make-sigs
+               (make-posn 100 20)
+               (make-tank 20 -3)
+               #false))
+
+(define sigs4 (make-sigs
+               (make-posn 100 20)
+               (make-tank 20 -3)
+               (make-posn
+                20 (- HEIGHT
+                      TANK_HEIGHT
+                      10))))
+
+(define s10 (tank-render
+             (sigs-tank sigs1)
+             (ufo-render (sigs-ufo sigs1)
+                         (missile-render.v2
+                          (sigs-missile sigs1)
+                          BACKGROUND))))
+
+
+(check-expect (si-control.v2 sigs1 "left") sigs3)
+(check-expect (si-control.v2 sigs3 "right") sigs1)
+(check-expect (si-control.v2 sigs1 "right") sigs1)
+(check-expect (si-control.v2 sigs3 "left") sigs3)
+(check-expect (si-control.v2 sigs1 " ") sigs2)
+(check-expect (si-control.v2 sigs2 "left") sigs4)
+(check-expect (si-control.v2 sigs2 "right") sigs2)
+(check-expect (si-control.v2 sigs4 "right") sigs2)
+(check-expect (si-control.v2 sigs4 "left") sigs4)
+
+; SIGS Number -> SIGS
+; move all the objects in the game world (with randomness)
+(define (si-move.v2 w)
+  (si-move-proper.v2 w (randomize 0.5)))
+
+(check-random (si-move.v2 sigs1)
+              (si-move-proper.v2 sigs1
+                                 (-
+                                  (random
+                                   (round (* UFO_WIDTH 0.5)))
+                                  (/ (* UFO_WIDTH 0.5) 2))))
+        
+; SIGS Number -> SIGS
+; move all the objects in the game world (predictably)
+; by delta
+(define (si-move-proper.v2 w delta)
+  (cond
+    [(boolean? (sigs-missile w))
+     (make-sigs
+      (make-posn (+ (posn-x (sigs-ufo w)) delta)
+                 (+ (posn-y (sigs-ufo w)) UFOSPEED))
+      (make-tank (+ (tank-loc (sigs-tank w))
+                    (tank-vel (sigs-tank w)))
+                 (tank-vel (sigs-tank w)))
+      #false)]
+    [(posn? (sigs-missile w))
+     (make-sigs
+      (make-posn (+ (posn-x (sigs-ufo w)) delta)
+                 (+ (posn-y (sigs-ufo w)) UFOSPEED))
+      (make-tank (+ (tank-loc (sigs-tank w))
+                    (tank-vel (sigs-tank w)))
+                 (tank-vel (sigs-tank w)))
+      (make-posn (posn-x (sigs-missile w))
+                 (- (posn-y (sigs-missile w))
+                    MISSILESPEED)))]))
+
+(check-expect (si-move-proper.v2 sigs1 3)
+              (make-sigs
+               (make-posn 103 22.5)
+               (make-tank 23 3)
+               #false))
+
+
+(check-expect (si-move-proper.v2 sigs2 3)
+              (make-sigs
+               (make-posn 103 22.5)
+               (make-tank 23 3)
+               (make-posn 20 (- HEIGHT TANK_HEIGHT 16.25))))
+
+(check-expect (si-render.v2 sigs1) s10)
+
+; SIGS -> boolean
+; A function to check whether the game-ending conditions
+; are met. Interpretation: stop the game if the UFO reaches
+; the bottom of the screen or the missile hits the ufo
+(define (si-game-over?.v2 si)
+  (cond
+    [(boolean? (sigs-missile si))
+     (>= (posn-y (sigs-ufo si)) (image-height BACKGROUND))]
+    [(posn? (sigs-missile si))
+     (or
+      (>= (posn-y (sigs-ufo si)) (image-height BACKGROUND))
+      (and
+       (<= (abs
+            (- (posn-y (sigs-ufo si))
+               (posn-y (sigs-missile si))))
+           2)
+       (<= (abs
+            (- (posn-x (sigs-ufo si))
+               (posn-x (sigs-missile si))))
+           5)))]))
+
+         
+
+(check-expect (si-game-over?.v2 (make-sigs
+                                 (make-posn 20 600)
+                                 (make-tank 50 0)
+                                 #false))
+              #true)
+
+(check-expect (si-game-over?.v2 (make-sigs
+                                 (make-posn 20 100)
+                                 (make-tank 50 0)
+                                 (make-posn 21 98)))
+              #true)
+
+(check-expect (si-game-over?.v2 (make-sigs
+                                 (make-posn 0 0)
+                                 (make-tank 0 3)
+                                 #false))
+              #false)
+
+(check-expect (si-game-over?.v2 (make-sigs
+                                 (make-posn 20 700)
+                                 (make-tank 50 0)
+                                 (make-posn 21 98)))
+              #true)
+
+; Exercise 102: reformulating the game on the basis of a
+; different data definition
+
