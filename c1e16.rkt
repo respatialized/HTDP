@@ -232,7 +232,12 @@
 (define (run s)
   (big-bang (make-editor s "")
             (to-draw render)
-            (on-key edit)))
+            (on-key edit)
+            (check-with editor?)))
 
 ; Exercise 85: uncovering new errors when using the interactive
 ; program for the first time
+
+; Exercise 114: ensuring that the world program for a
+; graphical editor respects the data definition used to
+; define the struct

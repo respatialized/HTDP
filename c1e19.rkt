@@ -518,7 +518,11 @@
             (on-tick si-move.v2)
             (to-draw si-render.v2)
             (on-key si-control.v2)
+            (check-with sigs?)
             (stop-when si-game-over?.v2 si-render-final)))
+
+; Exercise 114: checking the space invader game
+; to ensure data definitions are respected
 
 ; SIGS -> Image
 ; Returns an image based on the current locations of the
