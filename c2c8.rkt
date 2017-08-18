@@ -28,3 +28,35 @@
                           (cons "Lavender Fog" '()))))))
 
 ; Exercise 129: the verbose specification of linked lists
+
+
+(define FRIENDNAMES
+  (cons "Zeerak"
+        (cons "Kate"
+              (cons "Marc"
+                    (cons "Kristen"
+                          (cons "Kelly" '()))))))
+; Exercise 130: thinking about the CONSequences of a data definition
+
+
+; A List-of-Booleans is one of either:
+; - '()
+; (cons Boolean List-of-Booleans)
+
+; Exercise 131: recursion in a data definition for
+; arbitrarily large data
+
+
+; ConsOrEmpty -> Any
+; extracts the left part of the given pair
+(define (our-first a-list)
+  (if (empty? a-list)
+      (error 'our-first "...")
+      (pair-left a-list)))
+
+; ConsOrEmpty -> Any
+; extracts the right part of the given pair
+(define (our-rest a-list)
+  (if (empty? a-list)
+      (error 'our-rest "...")
+      (pair-right a-list)))
