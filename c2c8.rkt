@@ -49,14 +49,73 @@
 
 ; ConsOrEmpty -> Any
 ; extracts the left part of the given pair
-(define (our-first a-list)
-  (if (empty? a-list)
-      (error 'our-first "...")
-      (pair-left a-list)))
+;(define (our-first a-list)
+;  (if (empty? a-list)
+;     (error 'our-first "...")
+;     (pair-left a-list)))
 
 ; ConsOrEmpty -> Any
 ; extracts the right part of the given pair
-(define (our-rest a-list)
-  (if (empty? a-list)
-      (error 'our-rest "...")
-      (pair-right a-list)))
+;(define (our-rest a-list)
+; (if (empty? a-list)
+;     (error 'our-rest "...")
+;     (pair-right a-list)))
+
+
+; List-of-names -> Boolean
+; determines whether "Flatt" is on a list-of-names
+(define (contains-flatt? alon)
+  (cond
+    [(empty? alon) #false]
+    [(cons? alon)
+     (or (string=? (first alon) "Flatt")
+         (contains-flatt? (rest alon)))]))
+
+(check-expect (contains-flatt? '()) #false)
+(check-expect (contains-flatt? (cons "Find" '()))
+              #false)
+(check-expect (contains-flatt? (cons "Flatt" '()))
+              #true)
+(check-expect
+ (contains-flatt?
+  (cons "A" (cons "Flatt" (cons "C" '()))))
+  #true)
+
+(check-expect
+ (contains-flatt?
+  (cons "A" (cons "B" (cons "C" '()))))
+  #false)
+
+; The use of a smaller and smaller chunk of the list
+; each time is what allows the recursive function to
+; terminate.
+
+(contains-flatt?
+ (cons "Fagan"
+  (cons "Findler"
+    (cons "Fisler"
+      (cons "Flanagan"
+        (cons "Flatt"
+          (cons "Felleisen"
+            (cons "Friedman" '()))))))))
+
+; Exericse 132: expecting an answer of #true.
+
+(define (contains-flatt?/2 alon)
+  (cond
+    [(string=? (first alon) "Flatt") #true]
+    [else (contains-flatt?/2 (rest alon))]))
+
+; Exercise 133: an alternative way of writing the function
+; this version is better: it has a more compact syntax,
+; which avoids the unecessary type checking of the first
+; formulation.
+
+; Cons, String -> Boolean
+; 
+(define (contains? str list)
+  (cond
+    [(string=? (first list) str) #true]
+    [else (contains? str (rest list))]))
+
+
